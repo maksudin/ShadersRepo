@@ -3,6 +3,9 @@ Shader "Unlit/Bloom"
     Properties
     {
         _MainTex ("Texture", 2D) = "white" {}
+        _Threshold("Bloom Threshold", Range(0, 1)) = 0.5
+        _kSize("Intensity", Range(1, 1000)) = 65
+        _Spread("St. dev. (sigma)", Float) = 10.0
     }
     SubShader
     {
@@ -10,6 +13,8 @@ Shader "Unlit/Bloom"
 
         Pass
         {
+            Name "ThresholdPass"
+
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
@@ -30,6 +35,7 @@ Shader "Unlit/Bloom"
 
             sampler2D _MainTex;
             float4 _MainTex_ST;
+            float _Threshold;
 
             Interpolators vert (MeshData v)
             {
@@ -42,9 +48,12 @@ Shader "Unlit/Bloom"
             float4 frag (Interpolators i) : SV_Target
             {
                 float4 col = tex2D(_MainTex, i.uv);
-                return col;
+                float brightness = rgb2hsv(col).y;
+                return (brightness > _Threshold) ? col : float4(0,0,0,1);
             }
             ENDCG
         }
+        
+        // UsePass "Unlit/GaussianBlur/BLURPASS"
     }
 }
