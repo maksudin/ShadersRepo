@@ -20,6 +20,7 @@ Shader "Unlit/Bloom"
             #pragma fragment frag
 
             #include "UnityCG.cginc"
+            #include "ColorsUtil.cginc"
 
             struct MeshData
             {
@@ -54,6 +55,7 @@ Shader "Unlit/Bloom"
             ENDCG
         }
         
-        // UsePass "Unlit/GaussianBlur/BLURPASS"
+        // UsePass "Unlit/GaussianBlurMultiPass/HORIZONTALPASS"
+        // UsePass "Unlit/GaussianBlurMultiPass/VERTICALPASS"
     }
 }
