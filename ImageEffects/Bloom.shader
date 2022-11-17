@@ -35,6 +35,7 @@ Shader "Unlit/Bloom"
             };
 
             sampler2D _MainTex;
+            sampler2D _SrcTex;
             float4 _MainTex_ST;
             float _Threshold;
 
@@ -54,8 +55,63 @@ Shader "Unlit/Bloom"
             }
             ENDCG
         }
+
+        Pass
+        {
+            Name "AddPass"
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+
+            #include "UnityCG.cginc"
+
+            struct MeshData
+            {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            struct Interpolators
+            {
+                float2 uv : TEXCOORD0;
+                float4 vertex : SV_POSITION;
+            };
+
+            sampler2D _MainTex;
+            float4 _MainTex_ST;
+            float2 _MainTex_TexelSize;
+
+            // Texture representing the result of the bloom blur.
+            sampler2D _SrcTex;
+
+
+            Interpolators vert(MeshData v)
+            {
+                Interpolators o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.uv = v.uv;
+                return o;
+            }
+
+
+            /*	Poll the unblurred texture (_SrcTex, passed from a C# script
+                using Material.SetTexture()) and the blurred texture (_MainTex)
+                and return their sum.
+            */
+
+            float4 frag(Interpolators i) : SV_Target
+            {
+                float3 originalTex = tex2D(_SrcTex, i.uv);
+                float3 blurredTex = tex2D(_MainTex, i.uv);
+
+                return float4(originalTex + blurredTex, 1.0);
+            }
+            ENDCG
+        }
+
         
-        // UsePass "Unlit/GaussianBlurMultiPass/HORIZONTALPASS"
-        // UsePass "Unlit/GaussianBlurMultiPass/VERTICALPASS"
+        UsePass "Unlit/GaussianBlurMultiPass/HORIZONTALPASS"
+        UsePass "Unlit/GaussianBlurMultiPass/VERTICALPASS"
     }
 }
